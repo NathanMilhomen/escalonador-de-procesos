@@ -1,4 +1,5 @@
 #include "processo.h"
+#include <cstdlib>
 
 typedef struct fila Fila;
 
@@ -40,13 +41,59 @@ Fila *criarFila(int prioridade)
     fila->prioridade = prioridade;
     return fila;
 }
-void removerProcessoFila(Fila *fila)
+Processo *removerProcessoFila(Fila *fila)
 {
     Processo *elemento = fila->inicio;
 
     fila->inicio = elemento->next;
     fila->tamanho -= 1;
-    free(elemento);
+
+    return elemento;
+}
+void excluirProcesso(Fila *fila)
+{
+    Processo *processoRemovido = removerProcessoFila(fila);
+    free(processoRemovido);
+}
+bool removerProcessoFilaPorPid(Fila *fila, int pid)
+{
+
+    Processo *processoAtual = fila->inicio;
+    Processo *processoAnterior = NULL;
+
+    while (processoAtual != NULL)
+    {
+        if (processoAtual->pid == pid)
+        {
+            printf("Removendo o processo de pid %d\n", processoAtual->pid);
+            if (processoAnterior == NULL)
+            {
+                fila->inicio = processoAtual->next;
+            }
+            else
+            {
+                processoAnterior = processoAtual->next;
+            }
+            fila->tamanho -= 1;
+            free(processoAtual);
+            return true;
+        }
+        else
+        {
+            processoAnterior = processoAtual;
+            processoAtual = processoAtual->next;
+        }
+    }
+
+    if (fila->next != NULL)
+    {
+        removerProcessoFilaPorPid(fila->next, pid);
+    }
+    else
+    {
+        printf("Nenhum processo com o PID '%d' foi encontrado\n", pid);
+        return false;
+    }
 }
 void adicionarProcessoAFila(Processo *novoProcesso, Fila *fila)
 {
