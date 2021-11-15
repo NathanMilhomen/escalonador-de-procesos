@@ -16,26 +16,34 @@ void adicionarFila(Escalonador *escalonador, Fila *fila)
         escalonador->inicio = fila;
         escalonador->filaMaiorPrioridade = fila;
     }
-    else
+    else // Adiciona ordenado por prioridade
     {
         Fila *atual = escalonador->filaMaiorPrioridade;
 
         if (fila->prioridade > escalonador->filaMaiorPrioridade->prioridade)
         {
             // Adicionar no começo
-
             fila->next = atual;
 
             escalonador->filaMaiorPrioridade = fila;
+            return;
         }
         else
         {
-            // Adicionar no final
+            // Adicionar no meio
+            Fila *anterior = NULL;
             while (atual->next != NULL)
             {
+                if (fila->prioridade > atual->prioridade)
+                {
+                    fila->next = atual;
+                    anterior->next = fila;
+                    return;
+                }
+                anterior = atual;
                 atual = atual->next;
             }
-
+            // adiciona no final
             atual->next = fila;
         }
     }
@@ -48,7 +56,7 @@ void adicionarProcesso(Escalonador *escalonador, Processo *processo, Fila *fila)
     }
     else
     {
-        // adiciona a de menor, vulgo ultima fila do escalonador
+        // adiciona a ultima fila do escalonador (menor prioridade)
         Fila *atual = escalonador->filaMaiorPrioridade;
         while (atual->next != NULL)
         {
@@ -83,11 +91,6 @@ void executarProcesso(Escalonador *escalonador)
         printf("Nenhum processo para ser executado");
     }
 }
-void moverProcessoEntreFilas()
-{
-    // Mover processo entre filas: transfere um processo de uma fila para outra.
-    // O processo movido pode estar em qualquer posição da fila de origem e será colocado no final da fila de destino.
-}
 void finalizarProcesso(Escalonador *escalonador)
 {
     Fila *fila = getPrimeiraListaNaoVazia(escalonador);
@@ -98,7 +101,7 @@ void finalizarProcessoPorPID(Escalonador *escalonador, int pid)
     // Finalizar processo específico: Encerra um processo a partir do ID escolhido, removendo-o completamente do sistema.
     // O processo pode estar em qualquer fila no momento da remoção.
     Fila *filaAtual = getPrimeiraListaNaoVazia(escalonador);
-    removerProcessoFilaPorPid(filaAtual, pid);
+    excluirProcessoPorPID(filaAtual, pid);
 }
 
 void imprimirEscalonador(Escalonador *escalonador)

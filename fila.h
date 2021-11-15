@@ -41,6 +41,8 @@ Fila *criarFila(int prioridade)
     fila->prioridade = prioridade;
     return fila;
 }
+
+// Remove o processo da fila porém não limpa da memoria
 Processo *removerProcessoFila(Fila *fila)
 {
     Processo *elemento = fila->inicio;
@@ -50,12 +52,18 @@ Processo *removerProcessoFila(Fila *fila)
 
     return elemento;
 }
+// Remove o processo da fila e limpa da memoria
 void excluirProcesso(Fila *fila)
 {
     Processo *processoRemovido = removerProcessoFila(fila);
-    free(processoRemovido);
+    if (processoRemovido != NULL)
+    {
+        printf("Removendo processo de PID %d\n", processoRemovido->pid);
+        free(processoRemovido);
+    }
 }
-bool removerProcessoFilaPorPid(Fila *fila, int pid)
+// Remove o processo da fila porém não limpa da memoria
+Processo *removerProcessoFilaPorPid(Fila *fila, int pid, bool procurarEmTodasFilas)
 {
 
     Processo *processoAtual = fila->inicio;
@@ -65,7 +73,6 @@ bool removerProcessoFilaPorPid(Fila *fila, int pid)
     {
         if (processoAtual->pid == pid)
         {
-            printf("Removendo o processo de pid %d\n", processoAtual->pid);
             if (processoAnterior == NULL)
             {
                 fila->inicio = processoAtual->next;
@@ -75,8 +82,7 @@ bool removerProcessoFilaPorPid(Fila *fila, int pid)
                 processoAnterior = processoAtual->next;
             }
             fila->tamanho -= 1;
-            free(processoAtual);
-            return true;
+            return processoAtual;
         }
         else
         {
@@ -85,14 +91,24 @@ bool removerProcessoFilaPorPid(Fila *fila, int pid)
         }
     }
 
-    if (fila->next != NULL)
+    if (fila->next != NULL && procurarEmTodasFilas)
     {
-        removerProcessoFilaPorPid(fila->next, pid);
+        removerProcessoFilaPorPid(fila->next, pid, procurarEmTodasFilas);
     }
     else
     {
         printf("Nenhum processo com o PID '%d' foi encontrado\n", pid);
-        return false;
+        return NULL;
+    }
+}
+// Remove o processo da fila e limpa da memoria
+void excluirProcessoPorPID(Fila *fila, int pid)
+{
+    Processo *processoExcluido = removerProcessoFilaPorPid(fila, pid, true);
+    if (processoExcluido != NULL)
+    {
+        printf("Removendo o processo de pid %d\n", processoExcluido->pid);
+        free(processoExcluido);
     }
 }
 void adicionarProcessoAFila(Processo *novoProcesso, Fila *fila)
@@ -113,4 +129,13 @@ void adicionarProcessoAFila(Processo *novoProcesso, Fila *fila)
         fila->ultimo = novoProcesso;
     }
     fila->tamanho += 1;
+}
+void moverProcessoFilaPorPid(Fila *filaOrigem, Fila *filaDestino, int pid)
+{
+    Processo *processoASerMovido = removerProcessoFilaPorPid(filaOrigem, pid, false);
+    if (processoASerMovido != NULL)
+    {
+        printf("Movendo processo de PID %d\n", processoASerMovido->pid);
+        adicionarProcessoAFila(processoASerMovido, filaDestino);
+    }
 }
